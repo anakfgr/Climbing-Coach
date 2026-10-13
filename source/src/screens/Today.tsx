@@ -3,7 +3,7 @@ import { DOW, DOW_SHORT, PHASES, TYPE_LABEL, WEEK_NOTE, getDay, isTraining } fro
 import { TARGETS } from "../data/nutrition";
 import { dateOf, fmtLong, planIndex, sessionKey, weekDay } from "../lib/date";
 import { liveSession, liveSessions, useAppState } from "../lib/store";
-import { DayCard } from "../components/DayCard";
+import { DayCard, QuickDone } from "../components/DayCard";
 import { ProteinTracker } from "../components/widgets";
 import { Icon } from "../components/ui";
 import { readDraft } from "./SessionRunner";
@@ -74,6 +74,7 @@ export function Today({ onStart, onGo }: { onStart: (w: number, d: number) => vo
                   <Icon name="play" /> {resumable ? "Reprendre la séance" : day.type === "rest" ? "Faire la mobilité" : "Démarrer la séance"}
                 </button>
               )}
+              {!done && <QuickDone key={`${week}-${dow}`} week={week} dow={dow} rest={day.type === "rest"} />}
             </div>
           </section>
 

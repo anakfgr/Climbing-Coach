@@ -34,6 +34,12 @@ function Shell({ settings, setSettings }: { settings: boolean; setSettings: (v: 
   const [tab, setTab] = useState<Tab>(readHash);
   const [anchor, setAnchor] = useState<string | undefined>();
   const [session, setSession] = useState<{ w: number; d: number } | null>(null);
+  const [updateReady, setUpdateReady] = useState(false);
+  useEffect(() => {
+    const on = () => setUpdateReady(true);
+    window.addEventListener("app-update", on);
+    return () => window.removeEventListener("app-update", on);
+  }, []);
 
   useEffect(() => { void initSync(); }, []);
   useEffect(() => {
@@ -68,6 +74,14 @@ function Shell({ settings, setSettings }: { settings: boolean; setSettings: (v: 
         </div>
       </header>
 
+      {updateReady && !session && (
+        <div className="wrap" style={{ paddingTop: 12 }}>
+          <div className="banner info row between">
+            <span>Nouvelle version de l’app disponible.</span>
+            <button type="button" className="btn sm pri" onClick={() => location.reload()}>Mettre à jour</button>
+          </div>
+        </div>
+      )}
       <main className="wrap">
         {tab === "today" && <Today onStart={start} onGo={go} />}
         {tab === "plan" && <Plan onStart={start} onGo={go} />}

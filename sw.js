@@ -1,7 +1,7 @@
 // Projet V8 service worker: offline support.
 // Pages: network first (updates arrive as soon as you are online), cache as fallback.
 // Static assets and fonts: cache first, refreshed in the background.
-const CACHE = "projet-v8-v2.0.0";
+const CACHE = "projet-v8-v2.1.0";
 const CORE = ["./", "./index.html", "./manifest.webmanifest", "./icon-192.png", "./icon-512.png", "./apple-touch-icon.png"];
 
 self.addEventListener("install", (e) => {
@@ -21,8 +21,9 @@ self.addEventListener("fetch", (e) => {
   const req = e.request;
   if (req.method !== "GET") return;
   const url = new URL(req.url);
-  // Never cache the sync backend.
+  // Never cache the sync backend, and let the app's version check reach the network.
   if (url.hostname.endsWith("supabase.co")) return;
+  if (req.cache === "no-store") return;
 
   if (req.mode === "navigate") {
     e.respondWith(

@@ -5,7 +5,8 @@ import { exportBackup, importBackup, update, useAppState } from "../lib/store";
 import { SETUP_SQL, getConfig, saveConfig, signIn, signOut, signUp, syncNow, useSync } from "../lib/sync";
 import { Fold, Sheet, useToast } from "../components/ui";
 
-export const APP_VERSION = "2.0.0";
+export const APP_VERSION = "2.1.0";
+export const BUILD_LABEL = new Date(__BUILD_TIME__).toLocaleString("fr-FR", { day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" });
 
 export function SupabaseGuide() {
   const toast = useToast();
@@ -148,7 +149,7 @@ export function Settings({ open, onClose }: { open: boolean; onClose: () => void
       <SyncPanel />
       <hr style={{ border: 0, borderTop: "1px solid var(--line)", width: "100%" }} />
       <Backup />
-      <p className="muted small">Projet V8 · version {APP_VERSION}</p>
+      <p className="muted small">Projet V8 · version {APP_VERSION} · mise à jour du {BUILD_LABEL}</p>
     </Sheet>
   );
 }

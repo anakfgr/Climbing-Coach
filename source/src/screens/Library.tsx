@@ -6,8 +6,10 @@ import { useAppState } from "../lib/store";
 import type { Exercise, PhaseId, WarmKey } from "../types";
 import { ExerciseArt, FrontLeverStrip, GRIPS, Grip, HangPosture } from "../components/Illustrations";
 import { Icon } from "../components/ui";
+import { BOARDS, BOARD_GRADE_NOTE, boardPlan } from "../data/boards";
+import { currentGrade } from "../lib/store";
 
-type Seg = "warm" | "gym" | "grips";
+type Seg = "warm" | "gym" | "boards" | "grips";
 
 function ExerciseCard({ ex, ph }: { ex: Exercise; ph: PhaseId }) {
   return (
@@ -68,9 +70,10 @@ export function Library({ anchor }: { anchor?: string }) {
     <div className="view">
       <div><div className="eyebrow">Tout ce qu’il faut savoir faire</div><h2>Bibliothèque</h2></div>
       <div className="seg" role="tablist">
-        <button type="button" role="tab" aria-selected={seg === "warm"} className={seg === "warm" ? "on" : ""} onClick={() => setSeg("warm")}>Échauffements</button>
+        <button type="button" role="tab" aria-selected={seg === "warm"} className={seg === "warm" ? "on" : ""} onClick={() => setSeg("warm")}>Échauff.</button>
         <button type="button" role="tab" aria-selected={seg === "gym"} className={seg === "gym" ? "on" : ""} onClick={() => setSeg("gym")}>Salle</button>
-        <button type="button" role="tab" aria-selected={seg === "grips"} className={seg === "grips" ? "on" : ""} onClick={() => setSeg("grips")}>Prises & poutre</button>
+        <button type="button" role="tab" aria-selected={seg === "boards"} className={seg === "boards" ? "on" : ""} onClick={() => setSeg("boards")}>Boards</button>
+        <button type="button" role="tab" aria-selected={seg === "grips"} className={seg === "grips" ? "on" : ""} onClick={() => setSeg("grips")}>Prises</button>
       </div>
 
       {seg === "warm" && (
@@ -146,6 +149,37 @@ export function Library({ anchor }: { anchor?: string }) {
           </section>
         </>
       )}
+
+      {seg === "boards" && <BoardsSection />}
     </div>
+  );
+}
+
+function BoardsSection() {
+  const s = useAppState();
+  const g = currentGrade(s);
+  const weeks = [5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16];
+  return (
+    <>
+      <p className="muted">Les 4 murs d’entraînement de Lighthouse. Le jeudi, la séance guidée t’indique lequel prendre, à quel angle et quels filtres régler dans son app.</p>
+      <section className="card stack">
+        <h3>La rotation du jeudi</h3>
+        <div className="tbl"><table>
+          <thead><tr><th>Sem.</th><th>Board</th><th>Angle</th><th>Niveau visé</th></tr></thead>
+          <tbody>{weeks.map((w) => { const p = boardPlan(w, g); return (
+            <tr key={w}><td className="n">S{w}</td><td><span className="row" style={{ gap: 6, flexWrap: "nowrap" }}><span className={`board-dot b-${p.board.id}`} />{p.board.name}</span></td><td className="n">{p.angle}°</td><td className="n">{p.low}-{p.high}{p.easy ? " · léger" : ""}</td></tr>
+          ); })}</tbody>
+        </table></div>
+        <p className="muted small">Niveaux calculés à partir de ton meilleur niveau actuel ({g}) : ils montent tout seuls quand tu enchaînes plus dur. {BOARD_GRADE_NOTE}</p>
+      </section>
+      {(["kilter", "tension", "moon", "spray"] as const).map((id) => { const b = BOARDS[id]; return (
+        <section className="card stack" key={id}>
+          <div className="row between"><h3 className="row" style={{ gap: 8 }}><span className={`board-dot b-${id}`} />{b.name}</h3><span className="chip">{b.app}</span></div>
+          <p className="small muted">{b.specs}</p>
+          <p>{b.use}</p>
+          <ul className="clean small">{b.tips.map((t) => <li key={t}>{t}</li>)}</ul>
+        </section>
+      ); })}
+    </>
   );
 }

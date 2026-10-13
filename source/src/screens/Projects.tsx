@@ -3,10 +3,12 @@ import { GRADES, HOLD_COLORS, STYLES } from "../data/nutrition";
 import { FONT } from "../data/program";
 import { fmtShort } from "../lib/date";
 import { currentGrade, liveClimbs, now, uid, update, useAppState } from "../lib/store";
-import type { Climb, Grade } from "../types";
+import type { BoardId, Climb, Grade } from "../types";
+import { BOARDS } from "../data/boards";
 import { Icon, Sheet, useToast } from "../components/ui";
 
 const styleLabel = (id: string) => STYLES.find((s) => s.id === id)?.label ?? id;
+const kindLabel = (c: Climb) => (c.board ? `${BOARDS[c.board].name}${c.angle && c.board !== "moon" ? ` ${c.angle}°` : ""}` : styleLabel(c.style));
 const colorHex = (id: string) => HOLD_COLORS.find((c) => c.id === id)?.hex;
 
 function Pyramid({ climbs, best }: { climbs: Climb[]; best: Grade }) {
@@ -70,8 +72,16 @@ function ClimbSheet({ climb, onClose }: { climb: Climb | null; onClose: () => vo
         <div className="pick grades">{GRADES.map((g) => <button key={g} type="button" className={c.grade === g ? "on" : ""} onClick={() => set({ grade: g })}>{g}</button>)}</div>
       </div>
       <div className="stack"><span className="field">Style</span>
-        <div className="pick">{STYLES.map((x) => <button key={x.id} type="button" className={c.style === x.id ? "on" : ""} onClick={() => set({ style: x.id })}>{x.label}</button>)}</div>
+        <div className="pick">{STYLES.map((x) => <button key={x.id} type="button" className={c.style === x.id ? "on" : ""} onClick={() => set({ style: x.id, board: x.id === "board" ? c.board ?? "kilter" : undefined })}>{x.label}</button>)}</div>
       </div>
+      {c.style === "board" && (
+        <div className="stack"><span className="field">Quel board</span>
+          <div className="pick">{(Object.keys(BOARDS) as BoardId[]).map((b) => <button key={b} type="button" className={c.board === b ? "on" : ""} onClick={() => set({ board: b, angle: b === "moon" ? 40 : c.angle ?? 40 })}>{BOARDS[b].name}</button>)}</div>
+          {c.board && c.board !== "moon" && c.board !== "spray" && (
+            <label className="field">Angle (°)<input className="input num" inputMode="numeric" value={c.angle ?? ""} onChange={(e) => set({ angle: Number(e.target.value.replace(/\D/g, "")) || undefined })} /></label>
+          )}
+        </div>
+      )}
       <div className="stack"><span className="field">Couleur des prises</span>
         <div className="row">{HOLD_COLORS.map((h) => <button key={h.id} type="button" aria-label={h.label} aria-pressed={c.color === h.id} className={`swatch ${c.color === h.id ? "on" : ""}`} style={{ background: h.hex }} onClick={() => set({ color: c.color === h.id ? "" : h.id })} />)}</div>
       </div>
@@ -140,7 +150,7 @@ export function Projects() {
             <span className="g">{c.grade.replace("V", "")}<span className="tag" style={{ background: colorHex(c.color) ?? "transparent", borderColor: colorHex(c.color) ? "var(--surface)" : "transparent" }} /></span>
             <div>
               <div className="nm">{c.name}</div>
-              <div className="meta">{c.grade} · {styleLabel(c.style)} · {c.attempts} essai{c.attempts > 1 ? "s" : ""}{c.sessions ? ` · ${c.sessions} séance${c.sessions > 1 ? "s" : ""}` : ""}</div>
+              <div className="meta">{c.grade} · {kindLabel(c)} · {c.attempts} essai{c.attempts > 1 ? "s" : ""}{c.sessions ? ` · ${c.sessions} séance${c.sessions > 1 ? "s" : ""}` : ""}</div>
             </div>
             {c.status === "enchaine" ? <span className={`chip ${c.flash ? "warn" : "ok"}`}>{c.flash ? "Flash" : fmtShort(new Date(c.sentAt ?? c.u))}</span> : <span className="muted"><Icon name="right" size={18} /></span>}
           </button>

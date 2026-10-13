@@ -5,6 +5,7 @@ import { dateOf, fmtShort, sessionKey, today } from "../lib/date";
 import { lastLoad, liveSession, update, useAppState } from "../lib/store";
 import type { WarmKey } from "../types";
 import { Fold, Html, Icon } from "./ui";
+import { BoardPlanCard } from "./BoardPlan";
 
 export function WarmFold({ k, open }: { k: WarmKey; open?: boolean }) {
   const p = WARM[k];
@@ -125,6 +126,7 @@ export function DayCard({ week, dow, onStart, onGotoExercise }: { week: number; 
           <section className="block" key={i}>
             <div className="bh"><h4>{b.t}</h4><span className="muted small">{b.d}</span></div>
             <ul className="clean">{b.items.map((it) => <li key={it}><Html s={it} /></li>)}</ul>
+            {b.board && <BoardPlanCard block={b} week={week} />}
             {b.timer && <span className="muted small"><Icon name="timer" size={13} /> {TIMERS[b.timer].name}</span>}
           </section>
         ))}

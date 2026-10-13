@@ -4,10 +4,12 @@ import { GYM_A, GYM_B, parseRest, parseSets } from "../data/exercises";
 import { GRADES, STYLES } from "../data/nutrition";
 import { fmtShort, fmtTime, sessionKey } from "../lib/date";
 import { beepEnd, beepGo, unlockAudio, useCountdown, useWakeLock } from "../lib/feedback";
-import { lastLoad, liveClimbs, now, uid, update, useAppState } from "../lib/store";
+import { currentGrade, lastLoad, liveClimbs, now, uid, update, useAppState } from "../lib/store";
 import type { Attempt, Block, Exercise, GymSet, Grade, HangSet, ResolvedDay, Style, WarmKey } from "../types";
 import { ExerciseArt, Grip, HangPosture } from "../components/Illustrations";
 import { Html, Icon, RestTimer, useToast } from "../components/ui";
+import { BoardPlanCard } from "../components/BoardPlan";
+import { boardPlan } from "../data/boards";
 
 /* ---------- Steps ---------- */
 type Step =
@@ -114,7 +116,7 @@ export function SessionRunner({ week, dow, onClose }: { week: number; dow: numbe
           {step.kind === "warm" && <WarmStep warm={step.warm} draft={draft} patch={patch} sid={`w${draft.step}`} />}
           {step.kind === "gym" && <GymStep ex={step.ex} phase={day.phase.id} draft={draft} patch={patch} deload={day.banners.some((b) => b.includes("décharge"))} />}
           {step.kind === "hang" && <HangStep block={step.block} bi={step.bi} draft={draft} patch={patch} />}
-          {step.kind === "attempts" && <AttemptsStep block={step.block} bi={step.bi} draft={draft} patch={patch} />}
+          {step.kind === "attempts" && <AttemptsStep block={step.block} bi={step.bi} week={week} draft={draft} patch={patch} />}
           {step.kind === "list" && <ListStep block={step.block} draft={draft} patch={patch} sid={`b${step.bi}`} />}
           {step.kind === "finish" && <Finish day={day} draft={draft} onSaved={onClose} />}
         </div>
@@ -273,10 +275,12 @@ function HangStep({ block, bi, draft, patch }: StepProps & { block: Block; bi: n
 }
 
 /* ---------- Attempts on projects / limit boulders ---------- */
-function AttemptsStep({ block, bi, draft, patch }: StepProps & { block: Block; bi: number }) {
+function AttemptsStep({ block, bi, week, draft, patch }: StepProps & { block: Block; bi: number; week: number }) {
   const s = useAppState();
   const toast = useToast();
-  const projects = liveClimbs(s).filter((c) => c.status === "projet").sort((a, b) => b.u - a.u);
+  const plan = block.board === "auto" ? boardPlan(week, currentGrade(s)) : null;
+  // On a board day, only that board's projects; otherwise only gym projects.
+  const projects = liveClimbs(s).filter((c) => c.status === "projet" && (plan ? c.board === plan.board.id : !c.board)).sort((a, b) => b.u - a.u);
   const current = draft.current[bi] ?? (projects[0]?.id ?? "free");
   const climb = current !== "free" ? s.climbs[current] : undefined;
   const mine = draft.attempts.filter((a) => a.b === bi);
@@ -284,7 +288,7 @@ function AttemptsStep({ block, bi, draft, patch }: StepProps & { block: Block; b
   const rest = block.rest ?? 240;
   const cd = useCountdown(beepEnd);
   const [creating, setCreating] = useState(false);
-  const [nGrade, setNGrade] = useState<Grade>("V5");
+  const [nGrade, setNGrade] = useState<Grade>(plan?.low ?? "V5");
   const [nStyle, setNStyle] = useState<Style>("reglettes");
   const [nName, setNName] = useState("");
 
@@ -308,7 +312,7 @@ function AttemptsStep({ block, bi, draft, patch }: StepProps & { block: Block; b
       patch((d) => { d.attempts.push({ grade: g, result, at, b: bi }); d.free.tries += 1; });
       if (result === "top") {
         const id = uid();
-        update((d) => { d.climbs[id] = { id, name: `Bloc ${g} du ${fmtShort(new Date(at))}`, grade: g, style: "reglettes", color: "", status: "enchaine", flash: draft.free.tries === 0, attempts: draft.free.tries + 1, sessions: 1, created: at, sentAt: at, notes: "", u: at }; });
+        update((d) => { d.climbs[id] = { id, name: `${plan ? plan.board.name : "Bloc"} ${g} du ${fmtShort(new Date(at))}`, grade: g, style: plan ? "board" : "reglettes", board: plan?.board.id, angle: plan?.angle, color: "", status: "enchaine", flash: draft.free.tries === 0, attempts: draft.free.tries + 1, sessions: 1, created: at, sentAt: at, notes: "", u: at }; });
         patch((d) => { d.free.tries = 0; });
         toast(draft.free.tries === 0 ? `Flash en ${g} ajouté au carnet` : `${g} enchaîné, ajouté au carnet`);
         beepEnd();
@@ -320,7 +324,7 @@ function AttemptsStep({ block, bi, draft, patch }: StepProps & { block: Block; b
 
   const create = () => {
     const id = uid(), t = now();
-    update((d) => { d.climbs[id] = { id, name: nName.trim() || `Projet ${nGrade}`, grade: nGrade, style: nStyle, color: "", status: "projet", flash: false, attempts: 0, sessions: 0, created: t, notes: "", u: t }; });
+    update((d) => { d.climbs[id] = { id, name: nName.trim() || `${plan ? plan.board.name : "Projet"} ${nGrade}`, grade: nGrade, style: plan ? "board" : nStyle, board: plan?.board.id, angle: plan?.angle, color: "", status: "projet", flash: false, attempts: 0, sessions: 0, created: t, notes: "", u: t }; });
     patch((d) => { d.current[bi] = id; });
     setCreating(false); setNName("");
   };
@@ -329,6 +333,7 @@ function AttemptsStep({ block, bi, draft, patch }: StepProps & { block: Block; b
     <>
       <p className="muted">{block.d} · repos {fmtTime(rest)} entre les essais</p>
       <ul className="clean small">{block.items.map((it) => <li key={it}><Html s={it} /></li>)}</ul>
+      {block.board && <BoardPlanCard block={block} week={week} />}
 
       <div className="card stack">
         <h4>Sur quoi tu grimpes ?</h4>
@@ -337,13 +342,13 @@ function AttemptsStep({ block, bi, draft, patch }: StepProps & { block: Block; b
             <button key={p.id} type="button" className={current === p.id ? "on" : ""} onClick={() => patch((d) => { d.current[bi] = p.id; })}>{p.grade} · {p.name}</button>
           ))}
           <button type="button" className={current === "free" ? "on" : ""} onClick={() => patch((d) => { d.current[bi] = "free"; })}>Bloc libre</button>
-          <button type="button" onClick={() => setCreating((x) => !x)}>+ Nouveau projet</button>
+          <button type="button" onClick={() => setCreating((x) => !x)}>{plan ? `+ Bloc ${plan.board.name}` : "+ Nouveau projet"}</button>
         </div>
         {creating && (
           <div className="stack" style={{ borderTop: "1px solid var(--line)", paddingTop: 10 }}>
-            <label className="field">Nom (ex. « le jaune du dévers »)<input className="input" value={nName} onChange={(e) => setNName(e.target.value)} /></label>
+            <label className="field">{plan ? "Nom du bloc dans l’app (pour le retrouver)" : "Nom (ex. « le jaune du dévers »)"}<input className="input" value={nName} onChange={(e) => setNName(e.target.value)} /></label>
             <div className="pick grades">{GRADES.slice(1).map((g) => <button key={g} type="button" className={nGrade === g ? "on" : ""} onClick={() => setNGrade(g)}>{g}</button>)}</div>
-            <div className="pick">{STYLES.map((x) => <button key={x.id} type="button" className={nStyle === x.id ? "on" : ""} onClick={() => setNStyle(x.id)}>{x.label}</button>)}</div>
+            {!plan && <div className="pick">{STYLES.map((x) => <button key={x.id} type="button" className={nStyle === x.id ? "on" : ""} onClick={() => setNStyle(x.id)}>{x.label}</button>)}</div>}
             <button type="button" className="btn pri" onClick={create}>Créer et grimper</button>
           </div>
         )}

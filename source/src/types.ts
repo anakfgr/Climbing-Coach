@@ -3,6 +3,7 @@ export type DayType = "climb" | "gym" | "rest" | "test";
 export type WarmKey = "climb" | "finger" | "gym" | "cool" | "coolGym" | "mobility" | "express";
 export type TimerKey = "max" | "heavy" | "maint" | "prep" | "fwarm" | "limit" | "r3" | "r5" | "r44";
 export type Grade = "V2" | "V3" | "V4" | "V5" | "V6" | "V7" | "V8" | "V9";
+export type BoardId = "kilter" | "tension" | "moon" | "spray";
 export type Style = "dalle" | "reglettes" | "devers" | "compression" | "dynamique" | "board";
 
 export interface Phase {
@@ -23,6 +24,8 @@ export interface Block {
   timer?: TimerKey;
   /** How the guided session runs this block. Defaults to a checklist. */
   kind?: "hang" | "attempts" | "list";
+  /** "auto" = this week's board from the rotation; "spray" = spray wall. */
+  board?: "auto" | "spray";
   hang?: HangSpec;
   /** Rest between attempts, seconds (attempts blocks). */
   rest?: number;
@@ -108,6 +111,8 @@ export interface Climb extends Rec {
   created: number;
   sentAt?: number;
   notes: string;
+  board?: BoardId;
+  angle?: number;
 }
 
 export interface Profile extends Rec { start: string; weight: string; grade: Grade; }

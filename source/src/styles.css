@@ -333,3 +333,8 @@ pre.code { background: var(--sunk); border-radius: 10px; padding: 12px; font: 12
   .ladder span { padding: 2px 5px; font-size: 12px; }
 }
 .grips .illus, .illus.narrow { max-width: 300px; }
+
+/* Boards */
+.board-plan { border-radius: 10px; padding: 12px 14px; background: var(--bg); border: 1px solid var(--line); display: grid; gap: 8px; }
+.board-dot { width: 12px; height: 12px; border-radius: 3px; display: inline-block; flex: none; }
+.b-kilter { background: var(--p2b); } .b-tension { background: var(--p1); } .b-moon { background: var(--p3); } .b-spray { background: var(--muted); }

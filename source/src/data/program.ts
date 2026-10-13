@@ -131,10 +131,9 @@ export const DAYS: Record<PhaseId, Day[]> = {
       B("Course optionnelle", "jusqu’à 90 min", ["La sortie longue passe ici à partir de la Phase 2.", "Allure conversation. Le tempo et le fractionné concurrencent ta récupération de grimpe."])] },
     { dow: 3, type: "climb", title: "Board puissance", dur: "90 min", rpe: "8-9", warm: "climb", cool: true, blocks: [
       B("Board", "50 min", [
-        "Kilter, Moon ou le mur le plus raide. Commence par 4 blocs faciles sur le board.",
-        "6 à 8 blocs à ta limite sur board (compte 1 à 2 niveaux plus dur qu’en bloc).",
-        "4 essais max par bloc, 3 min de repos.",
-        "Gainage total : orteils qui tirent dans les prises, hanches près du mur."], { kind: "attempts", rest: 180, timer: "r3" }),
+        "Commence par 4 blocs faciles sur le board du jour pour chauffer les doigts.",
+        "Blocs à ta limite, 3 min de repos entre les essais.",
+        "Gainage total : orteils qui tirent dans les prises, hanches près du mur."], { kind: "attempts", rest: 180, timer: "r3", board: "auto" }),
       B("Blocages", "10 min", ["À la barre : 3 × 5 s à 90° puis à 120°, par bras.", "Pied sur une box pour s’aider si nécessaire."])] },
     { dow: 4, type: "gym", title: "Salle B", dur: "60 min", rpe: "7", warm: "gym", cool: true, gym: "B", intro: "Séance B complète, 3 séries, RPE 7." },
     { dow: 5, type: "climb", title: "Projet + flash", dur: "2 h à 2 h 30", rpe: "9-10", warm: "climb", cool: true, blocks: [
@@ -156,12 +155,12 @@ export const DAYS: Record<PhaseId, Day[]> = {
         "<b>S9-10 :</b> campus pieds posés sur les bacs du board, 5 séries de 6 mouvements, 2 min de repos.",
         "<b>S11 :</b> campus sur les plus grosses barres, échelles 1-2-3-4-5 en mains alternées, 5 séries, 3 min de repos.",
         "Le moindre inconfort aux doigts : stop, retour aux pieds posés."], { weeks: [9, 10, 11] }),
-      B("Board", "40 min", ["5 à 6 blocs à ta limite board, 4 essais max chacun, 3 min de repos."], { kind: "attempts", rest: 180, timer: "r3" })] },
+      B("Board", "40 min", ["Blocs à ta limite sur le board du jour, 3 min de repos entre les essais."], { kind: "attempts", rest: 180, timer: "r3", board: "auto" })] },
     { dow: 4, type: "gym", title: "Salle B", dur: "60 min", rpe: "7-8", warm: "gym", cool: true, gym: "B", intro: "Séance B complète, 3 séries. Passe au niveau de front lever suivant si l’actuel est solide." },
     { dow: 5, type: "climb", title: "Projet + 4×4", dur: "2 h 30", rpe: "9-10", warm: "climb", cool: true, blocks: [
       B("Projet", "60 min · V6 à V7", ["Crux d’abord, puis enchaînement, 4 à 5 min de repos."], { kind: "attempts", rest: 270, timer: "limit" }),
       B("Pause", "10 min", ["Bois, mange."]),
-      B("4×4", "25 min · V3 à V4", ["Choisis 4 blocs voisins.", "Grimpe les 4 à la suite sans repos = 1 tour.", "4 min de repos, 4 tours au total."], { weeks: [9, 10, 11], timer: "r44" })] },
+      B("4×4", "25 min · V3 à V4", ["Choisis 4 blocs voisins, ou crée 4 blocs maison sur le spray wall.", "Grimpe les 4 à la suite sans repos = 1 tour.", "4 min de repos, 4 tours au total."], { weeks: [9, 10, 11], timer: "r44", board: "spray" })] },
     { dow: 6, type: "rest", title: "Repos complet", dur: "", intro: "Repos total. Sommeil 8 à 9 h." },
   ],
   p3: [
@@ -172,7 +171,7 @@ export const DAYS: Record<PhaseId, Day[]> = {
     { dow: 1, type: "gym", title: "Salle A · maintenance", dur: "45 min", rpe: "7", warm: "gym", cool: true, gym: "A", intro: "Uniquement les 4 exercices ci-dessous, à la charge S11. Rien d’autre." },
     { dow: 2, type: "rest", title: "Repos actif", dur: "20 à 60 min", warm: "mobility", blocks: [B("Course optionnelle", "60 min max", ["Facile. Pas de sortie longue dans cette phase pour protéger samedi."])] },
     { dow: 3, type: "climb", title: "Board ou 2e projet", dur: "75 min", rpe: "8", warm: "climb", cool: true, blocks: [
-      B("Au choix selon ta forme", "45 min", ["<b>Frais :</b> 45 min de board limite (5 blocs, 4 essais chacun).", "<b>Un peu fatigué :</b> 45 min sur un second projet dans un style différent."], { kind: "attempts", rest: 180, timer: "r3" })] },
+      B("Au choix selon ta forme", "45 min", ["<b>Frais :</b> 45 min de board limite sur le board du jour.", "<b>Un peu fatigué :</b> 45 min sur un second projet dans un style différent."], { kind: "attempts", rest: 180, timer: "r3", board: "auto" })] },
     { dow: 4, type: "rest", title: "Repos ou gainage", dur: "0 à 20 min", warm: null, blocks: [
       B("Gainage optionnel", "20 min · pas de doigts", ["Relevés de jambes suspendu 3 × 8", "Front lever (ton niveau) 3 × 8 s", "Hollow body 2 × 30 s"])] },
     { dow: 5, type: "climb", title: "Jour de croix", dur: "2 h à 2 h 30", rpe: "10", warm: "climb", cool: true,

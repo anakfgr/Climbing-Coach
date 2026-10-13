@@ -140,6 +140,11 @@ export function Settings({ open, onClose }: { open: boolean; onClose: () => void
           <input className="input" type="date" value={p.start} onChange={(e) => { if (/^\d{4}-\d{2}-\d{2}$/.test(e.target.value)) setP({ start: toISO(mondayOf(parseISO(e.target.value))) }); }} />
         </label>
         <p className="muted small">Semaine 1 commence le {fmtLong(parseISO(p.start))}, fin le {fmtLong(dateOf(p.start, 16, 6))}. Une autre date est ramenée au lundi de sa semaine.</p>
+        <div className="row">
+          <button type="button" className="btn sm" onClick={() => { const d = parseISO(p.start); d.setDate(d.getDate() + 7); setP({ start: toISO(d) }); }}>Décaler d’une semaine (malade, voyage)</button>
+          <button type="button" className="btn sm ghost" onClick={() => { const d = parseISO(p.start); d.setDate(d.getDate() - 7); setP({ start: toISO(d) }); }}>Avancer d’une semaine</button>
+        </div>
+        <p className="muted small">Décaler repousse tout le plan sans perdre les séances déjà faites : elles restent attachées à leur semaine.</p>
         <label className="field">Poids (kg)<input className="input num" inputMode="decimal" value={p.weight} onChange={(e) => setP({ weight: e.target.value })} /></label>
         <div className="stack"><span className="field">Niveau de départ</span>
           <div className="pick grades">{GRADES.slice(1, 7).map((g) => <button key={g} type="button" className={p.grade === g ? "on" : ""} onClick={() => setP({ grade: g })}>{g}</button>)}</div>

@@ -34,6 +34,15 @@ function Shell({ settings, setSettings }: { settings: boolean; setSettings: (v: 
   const [tab, setTab] = useState<Tab>(readHash);
   const [anchor, setAnchor] = useState<string | undefined>();
   const [session, setSession] = useState<{ w: number; d: number } | null>(null);
+  // Move to the new day when the app is reopened after midnight, or stays open across it.
+  const [, setDayKey] = useState(() => new Date().toDateString());
+  useEffect(() => {
+    const check = () => setDayKey(new Date().toDateString());
+    const iv = window.setInterval(check, 60000);
+    const onVis = () => { if (document.visibilityState === "visible") check(); };
+    document.addEventListener("visibilitychange", onVis);
+    return () => { window.clearInterval(iv); document.removeEventListener("visibilitychange", onVis); };
+  }, []);
   const [updateReady, setUpdateReady] = useState(false);
   useEffect(() => {
     const on = () => setUpdateReady(true);

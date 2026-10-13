@@ -34,8 +34,13 @@ export const fmtTime = (s: number) => {
   s = Math.max(0, Math.ceil(s));
   return s >= 60 ? `${Math.floor(s / 60)}:${String(s % 60).padStart(2, "0")}` : String(s);
 };
-export const sessionKey = (week: number, dow: number) => `w${week}d${dow}`;
+/* Session keys: "w5d0" in the first cycle, "c2w5d0" from the second cycle on.
+   The store keeps the current cycle in sync here so every screen builds the same keys. */
+let CYCLE = 1;
+export const setCycle = (c: number) => { CYCLE = c || 1; };
+export const currentCycle = () => CYCLE;
+export const sessionKey = (week: number, dow: number, cycle = CYCLE) => (cycle > 1 ? `c${cycle}w${week}d${dow}` : `w${week}d${dow}`);
 export function parseKey(k: string) {
-  const m = k.match(/^w(\d+)d(\d)$/);
-  return m ? { week: Number(m[1]), dow: Number(m[2]) } : null;
+  const m = k.match(/^(?:c(\d+))?w(\d+)d(\d)$/);
+  return m ? { cycle: m[1] ? Number(m[1]) : 1, week: Number(m[2]), dow: Number(m[3]) } : null;
 }

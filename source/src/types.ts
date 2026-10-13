@@ -115,7 +115,19 @@ export interface Climb extends Rec {
   angle?: number;
 }
 
-export interface Profile extends Rec { start: string; weight: string; grade: Grade; }
+export interface Profile extends Rec {
+  start: string; weight: string; grade: Grade;
+  /** Training cycle number (1 = first 16 weeks). Later cycles start at week 5. */
+  cycle?: number;
+  firstWeek?: number;
+  climbTime?: string;
+  gymTime?: string;
+}
+
+export type PainArea = "doigt" | "coude" | "epaule" | "poignet" | "autre";
+export interface Pain extends Rec { id: string; area: PainArea; side: "gauche" | "droite" | "les deux"; level: 1 | 2 | 3; note: string; at: number; resolvedAt?: number; }
+export interface Checkin extends Rec { sleep: 0 | 1 | 2; fingers: 0 | 1 | 2; energy: 0 | 1 | 2; }
+export interface Run extends Rec { id: string; date: string; mins: number; km?: number; dplus?: number; rpe: number; note: string; }
 export interface TestCell extends Rec { v: string; }
 export interface ProteinDay extends Rec { items: [string, number][]; }
 
@@ -128,4 +140,8 @@ export interface AppState {
   /** key = `${testId}:${week}` */
   tests: Record<string, TestCell>;
   protein: Record<string, ProteinDay>;
+  pains: Record<string, Pain>;
+  /** key = ISO date */
+  checkins: Record<string, Checkin>;
+  runs: Record<string, Run>;
 }

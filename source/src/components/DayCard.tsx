@@ -7,6 +7,7 @@ import { boardLabel } from "../data/boards";
 import type { WarmKey } from "../types";
 import { Fold, Html, Icon } from "./ui";
 import { BoardPlanCard } from "./BoardPlan";
+import { adaptFor } from "../lib/coach";
 
 export function WarmFold({ k, open }: { k: WarmKey; open?: boolean }) {
   const p = WARM[k];
@@ -114,6 +115,7 @@ export function DayCard({ week, dow, onStart, onGotoExercise }: { week: number; 
       </div>
       <div className="day-body">
         {day.banners.map((b) => <div key={b} className="banner">{b}</div>)}
+        {adaptFor(s, day).banners.map((b) => <div key={b} className="banner bad small"><b>Adapté pour toi :</b> {b}</div>)}
         {day.intro && <p>{day.intro}</p>}
         {warm.map((k) => <WarmFold key={k} k={k} open={day.type === "rest"} />)}
         {day.gym && (

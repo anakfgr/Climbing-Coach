@@ -10,6 +10,7 @@ import { ExerciseArt, Grip, HangPosture } from "../components/Illustrations";
 import { Html, Icon, RestTimer, useToast } from "../components/ui";
 import { BoardPlanCard } from "../components/BoardPlan";
 import { boardPlan } from "../data/boards";
+import { adaptFor, suggestGym, suggestHang, type Adapt } from "../lib/coach";
 
 /* ---------- Steps ---------- */
 type Step =
@@ -67,6 +68,8 @@ export function SessionRunner({ week, dow, onClose }: { week: number; dow: numbe
     return { key, step: 0, startedAt: now(), checks: {}, hangs: {}, hangLoad: {}, gym: {}, attempts: [], touched: [], current: {}, free: { grade: "V4", tries: 0 } };
   });
   const [confirmQuit, setConfirmQuit] = useState(false);
+  const st = useAppState();
+  const adapt = adaptFor(st, day);
   const bodyRef = useRef<HTMLDivElement>(null);
   useWakeLock(true);
 
@@ -112,10 +115,13 @@ export function SessionRunner({ week, dow, onClose }: { week: number; dow: numbe
       <div className="runner-body" ref={bodyRef}>
         <div className="inner" key={draft.step}>
           {step.kind !== "intro" && step.kind !== "finish" && <h2 className="step-title">{step.title}</h2>}
-          {step.kind === "intro" && <Intro day={day} steps={steps} />}
+          {step.kind === "intro" && <Intro day={day} steps={steps} adapt={adapt} />}
           {step.kind === "warm" && <WarmStep warm={step.warm} draft={draft} patch={patch} sid={`w${draft.step}`} />}
-          {step.kind === "gym" && <GymStep ex={step.ex} phase={day.phase.id} draft={draft} patch={patch} deload={day.banners.some((b) => b.includes("décharge"))} />}
-          {step.kind === "hang" && <HangStep block={step.block} bi={step.bi} draft={draft} patch={patch} />}
+          {step.kind === "gym" && <GymStep ex={step.ex} phase={day.phase.id} week={week} draft={draft} patch={patch} deload={day.banners.some((b) => b.includes("décharge"))} />}
+          {step.kind === "hang" && (adapt.noHang
+            ? <div className="banner bad stack"><b>Suspensions supprimées aujourd’hui</b><span className="small">{adapt.banners[0]}</span><span className="small">Passe à l’étape suivante.</span></div>
+            : <HangStep block={adapt.hangDelta ? { ...step.block, hang: { ...step.block.hang!, sets: Math.max(1, step.block.hang!.sets + adapt.hangDelta) } } : step.block} bi={step.bi} week={week} draft={draft} patch={patch} />)}
+          {step.kind === "attempts" && (adapt.noBoard && step.block.board === "auto" || adapt.noLimit) && <div className="banner bad small"><b>Adapté pour toi :</b> {adapt.noBoard && step.block.board === "auto" ? "pas de board aujourd’hui. Remplace par 6 à 8 blocs faciles en main ouverte (V3 max), sans forcer." : "pas d’effort limite aujourd’hui. Blocs 2 niveaux sous ton max, RPE 6 à 7."}</div>}
           {step.kind === "attempts" && <AttemptsStep block={step.block} bi={step.bi} week={week} draft={draft} patch={patch} />}
           {step.kind === "list" && <ListStep block={step.block} draft={draft} patch={patch} sid={`b${step.bi}`} />}
           {step.kind === "finish" && <Finish day={day} draft={draft} onSaved={onClose} />}
@@ -139,7 +145,7 @@ export function SessionRunner({ week, dow, onClose }: { week: number; dow: numbe
 type StepProps = { draft: Draft; patch: (fn: (d: Draft) => void) => void };
 
 /* ---------- Intro ---------- */
-function Intro({ day, steps }: { day: ResolvedDay; steps: Step[] }) {
+function Intro({ day, steps, adapt }: { day: ResolvedDay; steps: Step[]; adapt: Adapt }) {
   return (
     <>
       <div className="stack">
@@ -148,6 +154,7 @@ function Intro({ day, steps }: { day: ResolvedDay; steps: Step[] }) {
         <div className="row">{day.dur && <span className="chip">{day.dur}</span>}{day.rpe && <span className="chip">RPE {day.rpe}</span>}</div>
       </div>
       {day.banners.map((b) => <div key={b} className="banner">{b}</div>)}
+      {adapt.banners.map((b) => <div key={b} className={`banner ${adapt.tone === "bad" ? "bad" : ""}`}><b>Adapté pour toi :</b> {b}</div>)}
       {day.intro && <p>{day.intro}</p>}
       <div className="card stack">
         <h4>Au programme</h4>
@@ -207,11 +214,12 @@ function ListStep({ block, draft, patch, sid }: StepProps & { block: Block; sid:
 
 /* ---------- Hangboard ---------- */
 type HangPhase = "idle" | "ready" | "work" | "rest" | "done";
-function HangStep({ block, bi, draft, patch }: StepProps & { block: Block; bi: number }) {
+function HangStep({ block, bi, week, draft, patch }: StepProps & { block: Block; bi: number; week: number }) {
   const s = useAppState();
   const spec = block.hang!;
   const sets = draft.hangs[bi] ?? [];
-  const load = draft.hangLoad[bi] ?? (lastLoad(s, "hang") || "0");
+  const sugg = suggestHang(s, week);
+  const load = draft.hangLoad[bi] ?? (sugg?.load ?? (lastLoad(s, "hang") || "0"));
   const [phase, setPhase] = useState<HangPhase>(sets.length >= spec.sets ? "done" : "idle");
   const phaseRef = useRef(phase);
   phaseRef.current = phase;
@@ -251,6 +259,7 @@ function HangStep({ block, bi, draft, patch }: StepProps & { block: Block; bi: n
         )}
         {phase === "done" && <button type="button" className="btn full" onClick={() => { patch((d) => { d.hangs[bi] = []; }); setPhase("idle"); }}>Recommencer le bloc</button>}
       </div>
+      {sugg && <p className="small"><b>Charge conseillée : {sugg.load} kg.</b> <span className="muted">{sugg.reason}</span></p>}
       <label className="field">Charge ajoutée (kg, négatif si assisté)
         <input className="input num" inputMode="decimal" value={load} onChange={(e) => { const v = e.target.value; patch((d) => { d.hangLoad[bi] = v; }); }} />
       </label>
@@ -381,12 +390,13 @@ function AttemptsStep({ block, bi, week, draft, patch }: StepProps & { block: Bl
 }
 
 /* ---------- Gym exercise ---------- */
-function GymStep({ ex, phase, draft, patch, deload }: StepProps & { ex: Exercise; phase: string; deload: boolean }) {
+function GymStep({ ex, phase, week, draft, patch, deload }: StepProps & { ex: Exercise; phase: string; week: number; deload: boolean }) {
   const s = useAppState();
   const spec = ex.sets[phase as keyof typeof ex.sets];
   const parsed = parseSets(spec);
   const nSets = deload ? 2 : parsed.sets;
-  const prev = lastLoad(s, ex.id) || (ex.startKg != null ? String(ex.startKg) : "");
+  const sugg = suggestGym(s, ex, phase, week);
+  const prev = sugg?.load ?? (lastLoad(s, ex.id) || (ex.startKg != null ? String(ex.startKg) : ""));
   const hasHistory = !!lastLoad(s, ex.id);
   const rows: GymSet[] = draft.gym[ex.id] ?? Array.from({ length: nSets }, () => ({ reps: parsed.reps, load: prev, done: false }));
   const cd = useCountdown(beepEnd);
@@ -403,7 +413,8 @@ function GymStep({ ex, phase, draft, patch, deload }: StepProps & { ex: Exercise
         <div className="illus"><ExerciseArt id={ex.id} /></div>
         <div className="stack" style={{ gap: 4 }}>
           <span className="big num" style={{ color: "var(--accent)" }}>{deload ? "2 séries, charge de la semaine passée" : spec}</span>
-          <span className="small muted">Repos {ex.rest}{hasHistory ? ` · dernière charge ${prev} kg` : ""}</span>
+          <span className="small muted">Repos {ex.rest}{hasHistory ? ` · dernière charge ${lastLoad(s, ex.id)} kg` : ""}</span>
+          {sugg && <span className="small"><b>Conseillé : {sugg.load} kg.</b> <span className="muted">{sugg.reason}</span></span>}
           {!hasHistory && <span className="small"><b>Départ conseillé :</b> {ex.start}</span>}
         </div>
       </div>

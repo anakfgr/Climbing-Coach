@@ -4,6 +4,8 @@ import { dateOf, fmtLong, mondayOf, parseISO, toISO } from "../lib/date";
 import { exportBackup, importBackup, update, useAppState } from "../lib/store";
 import { SETUP_SQL, getConfig, saveConfig, signIn, signOut, signUp, syncNow, useSync } from "../lib/sync";
 import { Fold, Sheet, useToast } from "../components/ui";
+import { buildICS, deliverICS } from "../lib/ics";
+import { cycleStartLabel, startNewCycle } from "../lib/coach";
 
 export const APP_VERSION = "2.1.0";
 export const BUILD_LABEL = new Date(__BUILD_TIME__).toLocaleString("fr-FR", { day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" });
@@ -105,6 +107,62 @@ function SyncPanel() {
   );
 }
 
+function CalendarPanel() {
+  const s = useAppState();
+  const toast = useToast();
+  const p = s.profile;
+  const [rest, setRest] = useState(false);
+  const setP = (patch: Partial<typeof p>) => update((d) => { d.profile = { ...d.profile, ...patch, u: Date.now() }; });
+  const climb = p.climbTime ?? "19:00", gym = p.gymTime ?? "07:30";
+  const go = async () => {
+    const url = location.origin + location.pathname;
+    const { ics, count } = buildICS(s, { climbTime: climb, gymTime: gym, includeRest: rest }, url);
+    if (!count) { toast("Aucune séance à venir à ajouter"); return; }
+    const r = await deliverICS(ics);
+    if (r !== "cancelled") toast(`${count} séances prêtes à ajouter au calendrier`);
+  };
+  return (
+    <section className="stack">
+      <h3>Calendrier</h3>
+      <p className="muted small">Ajoute toutes tes séances à venir à ton calendrier, avec un rappel la veille à 20 h.</p>
+      <div className="row" style={{ alignItems: "end" }}>
+        <label className="field" style={{ flex: 1, minWidth: 120 }}>Heure des séances grimpe<input className="input num" type="time" value={climb} onChange={(e) => e.target.value && setP({ climbTime: e.target.value })} /></label>
+        <label className="field" style={{ flex: 1, minWidth: 120 }}>Heure des séances salle<input className="input num" type="time" value={gym} onChange={(e) => e.target.value && setP({ gymTime: e.target.value })} /></label>
+      </div>
+      <button type="button" className={`check ${rest ? "on" : ""}`} aria-pressed={rest} onClick={() => setRest(!rest)}><span className="box" /><span className="txt">Inclure les jours de repos (mobilité, 30 min)</span></button>
+      <button type="button" className="btn pri" onClick={() => void go()}>Ajouter au calendrier</button>
+      <ul className="clean muted small">
+        <li><b>Le plus simple, depuis le Mac :</b> ouvre le fichier téléchargé, choisis un calendrier (crée « Projet V8 »). Il arrive tout seul sur ton iPhone via iCloud.</li>
+        <li><b>Sur iPhone :</b> dans la feuille de partage, choisis Calendrier, ou enregistre le fichier puis ouvre-le.</li>
+        <li>Importe une seule fois. Si tu décales le plan, supprime le calendrier « Projet V8 » et réimporte.</li>
+      </ul>
+    </section>
+  );
+}
+
+function CyclePanel() {
+  const s = useAppState();
+  const toast = useToast();
+  const [confirm, setConfirm] = useState(false);
+  const cycle = s.profile.cycle ?? 1;
+  return (
+    <section className="stack">
+      <h3>Cycle d’entraînement</h3>
+      <p className="small">Cycle {cycle} · {cycle > 1 ? "semaines 5 à 16" : "semaines 1 à 16"}, depuis le {fmtLong(cycleStartLabel(s))}.</p>
+      <p className="muted small">Un nouveau cycle repart de la Phase 2A (semaine 5) lundi prochain, avec tes charges actuelles comme base. Historique, projets et graphiques sont conservés.</p>
+      {confirm ? (
+        <div className="banner row between">
+          <span className="small">Lancer le cycle {cycle + 1} maintenant ?</span>
+          <span className="row">
+            <button type="button" className="btn sm pri" onClick={() => { const d = startNewCycle(); setConfirm(false); toast(`Cycle ${cycle + 1} : semaine 5 le ${fmtLong(parseISO(d))}`); }}>Lancer</button>
+            <button type="button" className="btn sm ghost" onClick={() => setConfirm(false)}>Annuler</button>
+          </span>
+        </div>
+      ) : <button type="button" className="btn sm" style={{ justifySelf: "start" }} onClick={() => setConfirm(true)}>Démarrer un nouveau cycle</button>}
+    </section>
+  );
+}
+
 function Backup() {
   const toast = useToast();
   const [open, setOpen] = useState(false);
@@ -151,7 +209,11 @@ export function Settings({ open, onClose }: { open: boolean; onClose: () => void
         </div>
       </section>
       <hr style={{ border: 0, borderTop: "1px solid var(--line)", width: "100%" }} />
+      <CalendarPanel />
+      <hr style={{ border: 0, borderTop: "1px solid var(--line)", width: "100%" }} />
       <SyncPanel />
+      <hr style={{ border: 0, borderTop: "1px solid var(--line)", width: "100%" }} />
+      <CyclePanel />
       <hr style={{ border: 0, borderTop: "1px solid var(--line)", width: "100%" }} />
       <Backup />
       <p className="muted small">Projet V8 · version {APP_VERSION} · mise à jour du {BUILD_LABEL}</p>

@@ -4,6 +4,8 @@ import { exById } from "../data/exercises";
 import { fmtShort, parseKey } from "../lib/date";
 import { liveClimbs, liveSessions, testValue, update, useAppState } from "../lib/store";
 import { LineChart } from "../components/widgets";
+import { PAIN_AREAS, PAIN_LEVELS } from "../lib/coach";
+import { mondayOf, parseISO, today } from "../lib/date";
 
 export function Progress() {
   const s = useAppState();
@@ -52,6 +54,8 @@ export function Progress() {
         </div>
       </section>
 
+      <RunsAndPains />
+
       <section className="card stack">
         <h3>Tests de référence</h3>
         <p className="muted small">Samedi des semaines 4, 8, 12 et 16. Repères = moyennes approximatives au niveau V7-V8 ; un chiffre qui stagne deux tests de suite devient la priorité du bloc suivant.</p>
@@ -93,7 +97,7 @@ export function Progress() {
               <details className="fold" key={x.key} style={{ marginBottom: 6 }}>
                 <summary>
                   <span className="row" style={{ gap: 10, flexWrap: "nowrap", minWidth: 0 }}>
-                    <span className="num muted small" style={{ flex: "none" }}>S{k?.week} {k ? DOW[k.dow].slice(0, 3) : ""}</span>
+                    <span className="num muted small" style={{ flex: "none" }}>{k && k.cycle > 1 ? `C${k.cycle} ` : ""}S{k?.week} {k ? DOW[k.dow].slice(0, 3) : ""}</span>
                     <span style={{ overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{day?.title}</span>
                   </span>
                   <span className="chip" style={{ flex: "none" }}>RPE {x.rpe}</span>
@@ -111,5 +115,42 @@ export function Progress() {
         </div>
       </section>
     </div>
+  );
+}
+
+function RunsAndPains() {
+  const s = useAppState();
+  const runs = Object.values(s.runs ?? {}).filter((r) => !r.del);
+  // Running minutes per week over the last 8 weeks.
+  const mon = mondayOf(today());
+  const weeks = Array.from({ length: 8 }, (_, i) => { const d = new Date(mon); d.setDate(d.getDate() - (7 - i) * 7); return d; });
+  const pts = weeks.map((w) => {
+    const end = new Date(w); end.setDate(end.getDate() + 7);
+    const mins = runs.filter((r) => { const d = parseISO(r.date); return d >= w && d < end; }).reduce((a, r) => a + r.mins, 0);
+    return { x: fmtShort(w).replace(".", ""), y: mins };
+  });
+  const pains = Object.values(s.pains ?? {}).filter((p) => !p.del).sort((a, b) => b.at - a.at);
+  return (
+    <section className="charts">
+      <div className="card chart stack">
+        <h4>Course à pied</h4>
+        <span className="muted small">Minutes par semaine, 8 dernières semaines</span>
+        <LineChart points={runs.length ? pts : []} unit="min" empty="Note tes sorties depuis Aujourd’hui" />
+      </div>
+      <div className="card stack">
+        <h4>Douleurs</h4>
+        {pains.length === 0 ? <p className="muted small">Aucune gêne signalée.</p> : (
+          <div className="stack" style={{ gap: 6 }}>
+            {pains.slice(0, 8).map((p) => (
+              <div key={p.id} className="row between small" style={{ borderBottom: "1px solid var(--line)", paddingBottom: 6 }}>
+                <span><b>{PAIN_AREAS.find((a) => a.id === p.area)?.label} {p.side}</b> · {PAIN_LEVELS[p.level].toLowerCase()}{p.note ? ` · ${p.note}` : ""}</span>
+                <span className="muted">{fmtShort(new Date(p.at))}{p.resolvedAt ? ` → ${fmtShort(new Date(p.resolvedAt))}` : " · en cours"}</span>
+              </div>
+            ))}
+          </div>
+        )}
+        <p className="muted small">Une gêne qui revient au même endroit : parles-en à un kiné avant qu’elle ne devienne une blessure.</p>
+      </div>
+    </section>
   );
 }

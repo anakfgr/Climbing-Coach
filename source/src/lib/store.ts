@@ -1,6 +1,6 @@
 import { useSyncExternalStore } from "react";
 import type { AppState, Climb, Grade, Rec, SessionLog } from "../types";
-import { mondayOf, toISO, today } from "./date";
+import { mondayOf, setCycle, toISO, today } from "./date";
 
 const KEY = "projetV8.v2";
 const V1_KEY = "projetV8.state";
@@ -17,6 +17,9 @@ export function blankState(): AppState {
     climbs: {},
     tests: {},
     protein: {},
+    pains: {},
+    checkins: {},
+    runs: {},
   };
 }
 
@@ -44,7 +47,7 @@ function load(): AppState {
     const v2 = localStorage.getItem(KEY);
     if (v2) {
       const parsed = JSON.parse(v2);
-      if (parsed?.v === 2) return { ...blankState(), ...parsed };
+      if (parsed?.v === 2) { const b = blankState(); return { ...b, ...parsed, pains: parsed.pains ?? {}, checkins: parsed.checkins ?? {}, runs: parsed.runs ?? {} }; }
     }
     const v1 = localStorage.getItem(V1_KEY);
     if (v1) {
@@ -56,6 +59,7 @@ function load(): AppState {
 }
 
 let state: AppState = load();
+setCycle(state.profile.cycle ?? 1);
 const listeners = new Set<() => void>();
 let onLocalChange: (() => void) | null = null;
 
@@ -73,6 +77,7 @@ export function update(fn: (draft: AppState) => void) {
   const draft = structuredClone(state);
   fn(draft);
   state = draft;
+  setCycle(state.profile.cycle ?? 1);
   persist();
   emit();
   onLocalChange?.();
@@ -81,6 +86,7 @@ export function update(fn: (draft: AppState) => void) {
 /** Replace state without triggering an upload (used after a merge from the server). */
 export function setStateQuiet(next: AppState) {
   state = next;
+  setCycle(state.profile.cycle ?? 1);
   persist();
   emit();
 }
@@ -101,6 +107,9 @@ export function mergeStates(a: AppState, b: Partial<AppState>): AppState {
     climbs: mergeMap(a.climbs, b.climbs),
     tests: mergeMap(a.tests, b.tests),
     protein: mergeMap(a.protein, b.protein),
+    pains: mergeMap(a.pains, b.pains),
+    checkins: mergeMap(a.checkins, b.checkins),
+    runs: mergeMap(a.runs, b.runs),
   };
 }
 

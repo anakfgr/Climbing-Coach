@@ -7,7 +7,8 @@ import { Fold, Html } from "../components/ui";
 
 export function Plan({ onStart, onGo }: { onStart: (w: number, d: number) => void; onGo: (tab: string, anchor?: string) => void }) {
   const s = useAppState();
-  const cw = Math.min(16, Math.max(1, weekDay(planIndex(s.profile.start)).week));
+  const fw = s.profile.firstWeek ?? 1;
+  const cw = Math.min(16, Math.max(fw, weekDay(planIndex(s.profile.start)).week));
   const [sel, setSel] = useState(cw);
   const ph = phaseOf(sel);
   const doneOf = (w: number) => { let n = 0, t = 0; for (let d = 0; d < 7; d++) if (isTraining(getDay(w, d))) { t++; if (liveSession(s, sessionKey(w, d))) n++; } return [n, t]; };
@@ -22,14 +23,14 @@ export function Plan({ onStart, onGo }: { onStart: (w: number, d: number) => voi
             return (
               <button key={w} type="button" aria-label={`Semaine ${w}`} aria-pressed={w === sel}
                 className={[w === sel && "sel", w === cw && "cur", DELOAD.includes(w) && "deload"].filter(Boolean).join(" ")}
-                style={{ ["--ph" as any]: `var(--${p.id})` }} onClick={() => setSel(w)}>
+                style={{ ["--ph" as any]: `var(--${p.id})`, opacity: w < fw ? 0.35 : 1 }} onClick={() => setSel(w)}>
                 {w}<i><b style={{ width: `${t ? (n / t) * 100 : 0}%` }} /></i>
               </button>
             );
           })}
         </div>
         <div className="phase-legend">{PHASES.map((p) => <div key={p.id} style={{ ["--ph" as any]: `var(--${p.id})` }}>{p.short} · {p.name}</div>)}</div>
-        <p className="muted small">Cadre noir = semaine en cours · hachuré = décharge · trait = séances faites.</p>
+        <p className="muted small">Cadre noir = semaine en cours · hachuré = décharge · trait = séances faites.{fw > 1 ? ` Cycle ${s.profile.cycle} : semaines ${fw} à 16 (les semaines grisées appartiennent au premier cycle).` : ""}</p>
       </section>
 
       <section className="stack" style={{ ["--ph" as any]: `var(--${ph.id})` }}>

@@ -15,8 +15,8 @@ export function SupabaseGuide() {
         <li>Va sur <b>supabase.com</b>, « Start your project », connecte-toi avec ton compte GitHub.</li>
         <li><b>New project</b> : nom « projet-v8 », choisis un mot de passe de base de données (garde-le), région <b>Southeast Asia (Singapore)</b>, puis Create.</li>
         <li>Menu <b>SQL Editor</b> → New query → colle le script ci-dessous → <b>Run</b>.</li>
-        <li>Menu <b>Project Settings → API</b> (ou « Data API » et « API Keys ») : copie la <b>Project URL</b> et la clé <b>anon public</b>.</li>
-        <li>Colle-les ci-dessus, puis crée ton compte avec ton email et un mot de passe.</li>
+        <li>Bouton <b>Connect</b> en haut du projet (ou <b>Project Settings → API Keys</b>) : copie la clé <b>anon public</b> et colle-la ci-dessus. L’URL se remplit toute seule.</li>
+        <li>Enregistrer, puis <b>Créer mon compte</b> avec ton email et un mot de passe.</li>
         <li>Optionnel : <b>Authentication → Sign In / Providers → Email</b>, désactive « Confirm email » pour éviter le mail de confirmation.</li>
       </ol>
       <pre className="code">{SETUP_SQL}</pre>
@@ -38,6 +38,26 @@ function SyncPanel() {
   const [busy, setBusy] = useState(false);
   const [editCfg, setEditCfg] = useState(!cfg);
 
+  // The legacy anon key is a JWT whose payload names the project ("ref"), so the URL can be filled for you.
+  const isJwt = (t: string) => /^eyJ[\w-]+\.[\w-]+\.[\w-]+$/.test(t.trim());
+  const refOf = (t: string): string | null => {
+    try { const p = JSON.parse(atob(t.trim().split(".")[1].replace(/-/g, "+").replace(/_/g, "/"))); return typeof p.ref === "string" ? p.ref : null; } catch { return null; }
+  };
+  const normUrl = (u: string) => { let x = u.trim().replace(/\/+$/, ""); if (/^[a-z0-9]{20}$/.test(x)) x = `https://${x}.supabase.co`; if (/^[\w-]+\.supabase\.co$/.test(x)) x = "https://" + x; return x; };
+  const onKey = (v: string) => { setKey(v); const ref = isJwt(v) ? refOf(v) : null; if (ref && !/^https:\/\//.test(url.trim())) setUrl(`https://${ref}.supabase.co`); };
+  const onUrl = (v: string) => {
+    if (isJwt(v)) { // key pasted in the URL field by mistake: move it and derive the URL
+      setKey(v.trim());
+      const ref = refOf(v);
+      setUrl(ref ? `https://${ref}.supabase.co` : "");
+      return;
+    }
+    setUrl(v);
+  };
+  const urlOk = /^https:\/\/[\w.-]+\.\w+/.test(normUrl(url));
+  const keyOk = key.trim().length >= 20 && !/^https?:/.test(key.trim());
+  const urlHint = url.trim() && !urlOk ? "L’URL doit ressembler à https://abcdefghijklmnop.supabase.co (Supabase → bouton « Connect » ou Project Settings → Data API)." : "";
+
   const run = async (fn: () => Promise<string | null>) => { setBusy(true); setMsg(""); const e = await fn(); setBusy(false); if (e) setMsg(e); else toast("Connecté, synchro active"); };
   const statusText: Record<string, string> = {
     off: "Désactivée : tes données restent sur cet appareil.", signedout: "Projet configuré, connecte-toi pour synchroniser.",
@@ -53,10 +73,11 @@ function SyncPanel() {
 
       {editCfg ? (
         <div className="card stack">
-          <label className="field">Project URL<input className="input" placeholder="https://xxxx.supabase.co" value={url} onChange={(e) => setUrl(e.target.value)} autoCapitalize="off" autoCorrect="off" spellCheck={false} /></label>
-          <label className="field">Clé anon public<input className="input" placeholder="eyJhbGciOi…" value={key} onChange={(e) => setKey(e.target.value)} autoCapitalize="off" autoCorrect="off" spellCheck={false} /></label>
+          <label className="field">Clé anon public (commence par eyJ… ou sb_publishable_…)<input className="input" placeholder="eyJhbGciOi…" value={key} onChange={(e) => onKey(e.target.value)} autoCapitalize="off" autoCorrect="off" spellCheck={false} /></label>
+          <label className="field">Project URL<input className="input" placeholder="https://xxxx.supabase.co" value={url} onChange={(e) => onUrl(e.target.value)} autoCapitalize="off" autoCorrect="off" spellCheck={false} /></label>
+          {urlHint && <div className="banner small">{urlHint}</div>}
           <div className="row">
-            <button type="button" className="btn pri" disabled={!/^https:\/\/.+/.test(url.trim()) || key.trim().length < 20} onClick={() => { saveConfig({ url: url.trim(), key: key.trim() }); setEditCfg(false); toast("Projet enregistré"); }}>Enregistrer</button>
+            <button type="button" className="btn pri" disabled={!urlOk || !keyOk} onClick={() => { saveConfig({ url: normUrl(url), key: key.trim() }); setEditCfg(false); toast("Projet enregistré, connecte-toi"); }}>Enregistrer</button>
             {cfg && <button type="button" className="btn ghost" onClick={() => setEditCfg(false)}>Annuler</button>}
           </div>
         </div>

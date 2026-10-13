@@ -58,6 +58,14 @@ export const WARM: Record<WarmKey, WarmProtocol> = {
     ["Épaules", "Écartés élastique 2 × 15 · suspension passive 2 × 20 s · tractions scapulaires 1 × 8."],
     ["Séries d’approche", "1 à 2 séries plus légères du premier exercice (par ex. 3 tractions au poids du corps avant les lestées)."],
   ] },
+  coolGym: { name: "Retour au calme salle", dur: "10 min", steps: [
+    ["Flush · 3 à 5 min", "Rameur ou vélo très facile, jusqu’à ce que les avant-bras et le dos ne soient plus congestionnés."],
+    ["Décompression · 1 min", "Suspension passive à la barre de traction, pieds au sol si besoin : 2 × 20 s, épaules relâchées."],
+    ["Avant-bras", "Fléchisseurs (paume vers le haut, tire les doigts en arrière) et extenseurs (paume vers le bas, tire le poing vers le bas) : 2 × 30 s chaque bras."],
+    ["Dorsaux et pectoraux", "Mains sur un montant du rack, recule les hanches pour étirer les dorsaux 30 s par côté · avant-bras contre le rack, tourne le buste pour les pectoraux 30 s par côté."],
+    ["Hanches et ischios", "Pigeon sur un banc ou au sol, ischios jambe tendue sur le banc : 45 s par côté."],
+    ["Antagonistes · 2 min", "Extensions des doigts avec un élastique 2 × 20 (ou contre la main opposée) · écartés élastique 1 × 15."],
+  ] },
   cool: { name: "Retour au calme", dur: "10 à 15 min", steps: [
     ["Flush · 3 à 5 min", "Traversée facile ou désescalade sur gros bacs jusqu’à ce que la congestion disparaisse."],
     ["Avant-bras", "Fléchisseurs (paume vers le haut, tire les doigts en arrière) et extenseurs (paume vers le bas, tire le poing vers le bas) : 2 × 30 s chaque bras."],
@@ -223,6 +231,8 @@ export function getDay(week: number, dow: number): ResolvedDay {
   if (week === 4 && dow === 5) banners.push("Fin de la Phase 1 : premier relevé de tes chiffres.");
   return { ...base, week, phase, blocks, banners };
 }
+
+export const coolKey = (d: { type: string }): WarmKey => (d.type === "gym" ? "coolGym" : "cool");
 
 export const isTraining = (d: { type: string }) => d.type !== "rest";
 

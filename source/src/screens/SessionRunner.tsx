@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from "react";
-import { TIMERS, WARM, getDay } from "../data/program";
+import { TIMERS, WARM, coolKey, getDay } from "../data/program";
 import { GYM_A, GYM_B, parseRest, parseSets } from "../data/exercises";
 import { GRADES, STYLES } from "../data/nutrition";
 import { fmtShort, fmtTime, sessionKey } from "../lib/date";
@@ -32,7 +32,7 @@ function buildSteps(day: ResolvedDay): Step[] {
     else if (b.kind === "attempts") st.push({ kind: "attempts", title: b.t, block: b, bi });
     else st.push({ kind: "list", title: b.t, block: b, bi });
   });
-  if (day.cool) st.push({ kind: "warm", title: WARM.cool.name, warm: "cool" });
+  if (day.cool) { const k = coolKey(day); st.push({ kind: "warm", title: WARM[k].name, warm: k }); }
   st.push({ kind: "finish", title: "Bilan" });
   return st;
 }

@@ -80,7 +80,8 @@ export function Library({ anchor }: { anchor?: string }) {
           <WarmCard k="finger" extra="Lundi en Phases 2A, 2B et 3, et le samedi des tests. Le pourcentage se règle avec les pieds." />
           <WarmCard k="express" />
           <WarmCard k="gym" />
-          <WarmCard k="cool" />
+          <WarmCard k="cool" extra="Après la grimpe, à la salle d’escalade." />
+          <WarmCard k="coolGym" extra="Après les séances Salle A et B, sans mur d’escalade." />
           <WarmCard k="mobility" extra="Mercredi et dimanche, ou tout soir où tu as 20 min devant une série." />
         </>
       )}

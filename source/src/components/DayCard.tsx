@@ -1,4 +1,4 @@
-import { DELOAD, TIMERS, TYPE_LABEL, WARM, getDay } from "../data/program";
+import { DELOAD, coolKey, TIMERS, TYPE_LABEL, WARM, getDay } from "../data/program";
 import { GYM_A, GYM_B } from "../data/exercises";
 import { dateOf, fmtShort, sessionKey } from "../lib/date";
 import { lastLoad, liveSession, update, useAppState } from "../lib/store";
@@ -84,7 +84,7 @@ export function DayCard({ week, dow, onStart, onGotoExercise }: { week: number; 
             {b.timer && <span className="muted small"><Icon name="timer" size={13} /> {TIMERS[b.timer].name}</span>}
           </section>
         ))}
-        {day.cool && <WarmFold k="cool" />}
+        {day.cool && <WarmFold k={coolKey(day)} />}
 
         {done ? (
           <div className="row between" style={{ borderTop: "1px dashed var(--line)", paddingTop: 12 }}>

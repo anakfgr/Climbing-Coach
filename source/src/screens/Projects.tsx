@@ -15,17 +15,17 @@ function Pyramid({ climbs, best }: { climbs: Climb[]; best: Grade }) {
   const gi = GRADES.indexOf(best);
   const goal = GRADES[Math.min(GRADES.length - 1, gi + 1)];
   const goalIdx = GRADES.indexOf(goal);
-  const rows = [0, 1, 2, 3].map((k) => GRADES[goalIdx - k]).filter(Boolean) as Grade[];
+  const rows = [0, 1, 2].map((k) => GRADES[goalIdx - k]).filter(Boolean) as Grade[];
   const target = (k: number) => 2 ** k;
   const count = (g: Grade) => climbs.filter((c) => c.status === "enchaine" && c.grade === g).length;
   const missing = rows.map((g, k) => Math.max(0, target(k) - count(g))).reduce((a, b) => a + b, 0);
   return (
     <section className="card stack">
       <div className="row between"><h3>Pyramide vers le {goal}</h3><span className="chip">{goal} ≈ {FONT[goal]}</span></div>
-      <p className="muted small">Pour tenir un niveau, il faut une base solide en dessous : 1 bloc au niveau visé, 2 juste en dessous, 4 puis 8. Le pointillé est la cible, la barre ce que tu as enchaîné.</p>
+      <p className="muted small">Pour tenir un niveau, il faut une base solide en dessous : 1 bloc au niveau visé, 2 juste en dessous, 4 encore en dessous. Le pointillé est la cible, la barre ce que tu as enchaîné. Seuls ces 3 niveaux comptent : pas besoin de noter tes blocs plus faciles.</p>
       <div className="pyramid">
         {rows.map((g, k) => {
-          const c = count(g), t = target(k), max = 8;
+          const c = count(g), t = target(k), max = 4;
           return (
             <div className="pyr-row" key={g}>
               <span className="lab">{g}</span>

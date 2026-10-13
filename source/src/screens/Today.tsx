@@ -2,7 +2,8 @@ import { useState } from "react";
 import { DOW, DOW_SHORT, PHASES, TYPE_LABEL, WEEK_NOTE, getDay, isTraining } from "../data/program";
 import { TARGETS } from "../data/nutrition";
 import { dateOf, fmtLong, planIndex, sessionKey, weekDay } from "../lib/date";
-import { liveSession, liveSessions, useAppState } from "../lib/store";
+import { currentGrade, liveSession, liveSessions, useAppState } from "../lib/store";
+import { boardLabel } from "../data/boards";
 import { DayCard, QuickDone } from "../components/DayCard";
 import { ProteinTracker } from "../components/widgets";
 import { Icon } from "../components/ui";
@@ -65,7 +66,7 @@ export function Today({ onStart, onGo }: { onStart: (w: number, d: number) => vo
               <div className="outline">
                 {day.warm && <div><span>Échauffement</span><span className="muted">20-25 min</span></div>}
                 {day.gym && <div><span>Séance {day.gym}</span><span className="muted">{day.dur}</span></div>}
-                {day.blocks.map((b, i) => <div key={i}><span>{b.t}</span><span className="muted">{b.d?.split("·")[0]}</span></div>)}
+                {day.blocks.map((b, i) => { const bl = boardLabel(b, week, currentGrade(s)); return <div key={i}><span>{b.t}{bl && <span className="muted small" style={{ display: "block" }}>{bl}</span>}</span><span className="muted">{b.d?.split("·")[0]}</span></div>; })}
               </div>
             )}
             <div className="actions">

@@ -2,7 +2,8 @@ import { useState } from "react";
 import { DELOAD, coolKey, TIMERS, TYPE_LABEL, WARM, getDay } from "../data/program";
 import { GYM_A, GYM_B } from "../data/exercises";
 import { dateOf, fmtShort, sessionKey, today } from "../lib/date";
-import { lastLoad, liveSession, update, useAppState } from "../lib/store";
+import { currentGrade, lastLoad, liveSession, update, useAppState } from "../lib/store";
+import { boardLabel } from "../data/boards";
 import type { WarmKey } from "../types";
 import { Fold, Html, Icon } from "./ui";
 import { BoardPlanCard } from "./BoardPlan";
@@ -125,6 +126,7 @@ export function DayCard({ week, dow, onStart, onGotoExercise }: { week: number; 
         {day.blocks.map((b, i) => (
           <section className="block" key={i}>
             <div className="bh"><h4>{b.t}</h4><span className="muted small">{b.d}</span></div>
+            {boardLabel(b, week, currentGrade(s)) && <span className="chip" style={{ justifySelf: "start" }}>{boardLabel(b, week, currentGrade(s))}</span>}
             <ul className="clean">{b.items.map((it) => <li key={it}><Html s={it} /></li>)}</ul>
             {b.board && <BoardPlanCard block={b} week={week} />}
             {b.timer && <span className="muted small"><Icon name="timer" size={13} /> {TIMERS[b.timer].name}</span>}

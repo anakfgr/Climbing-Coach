@@ -174,8 +174,9 @@ function BoardsSection() {
       </section>
       {(["kilter", "tension", "moon", "spray"] as const).map((id) => { const b = BOARDS[id]; return (
         <section className="card stack" key={id}>
-          <div className="row between"><h3 className="row" style={{ gap: 8 }}><span className={`board-dot b-${id}`} />{b.name}</h3><span className="chip">{b.app}</span></div>
+          <div className="row between"><h3 className="row" style={{ gap: 8 }}><span className={`board-dot b-${id}`} />{b.name}</h3><span className="chip">App {b.app}</span></div>
           <p className="small muted">{b.specs}</p>
+          <p className="small"><b>App :</b> {b.appNote}.</p>
           <p>{b.use}</p>
           <ul className="clean small">{b.tips.map((t) => <li key={t}>{t}</li>)}</ul>
         </section>

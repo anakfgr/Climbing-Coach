@@ -7,6 +7,7 @@ export interface BoardInfo {
   id: BoardId;
   name: string;
   app: string;
+  appNote: string;
   specs: string;
   use: string;
   tips: string[];
@@ -14,25 +15,25 @@ export interface BoardInfo {
 
 export const BOARDS: Record<BoardId, BoardInfo> = {
   kilter: {
-    id: "kilter", name: "Kilter Board", app: "App Kilter Board",
+    id: "kilter", name: "Kilter Board", app: "Kilter Board", appNote: "la nouvelle app officielle Kilter (lancée en mars 2026)",
     specs: "12 × 12 ft, angle réglable de 0 à 70°",
     use: "Puissance et gainage : grosses prises bien orientées, mouvements amples, pieds précis sur le kickboard.",
-    tips: ["Règle l’angle dans l’app avant de chercher les blocs : la liste dépend de l’angle.", "Les blocs avec peu de répétitions ont des cotations peu fiables.", "Utilise les circuits de l’app pour garder tes blocs du jour."],
+    tips: ["Depuis fin mars 2026, Kilter a sa propre app : l’ancienne a été retirée. Installe la nouvelle et crée un compte (les anciens carnets n’ont pas été transférés).", "Règle l’angle dans l’app avant de chercher les blocs : la liste dépend de l’angle.", "Les blocs avec peu de répétitions ont des cotations peu fiables.", "Utilise les circuits de l’app pour garder tes blocs du jour."],
   },
   tension: {
-    id: "tension", name: "Tension Board", app: "App Tension Board",
+    id: "tension", name: "Tension Board", app: "Tension Board 2", appNote: "app Tension Board 2, ou Tension Board si le mur est un TB1",
     specs: "8 × 12 ft, disposition miroir, angle réglable de 0 à 70°",
     use: "Précision des pieds et symétrie : prises en bois peu adhérentes, tout passe par la tension et le placement des pieds.",
-    tips: ["Disposition miroir : chaque bloc existe aussi dans l’autre sens. Fais les deux côtés pour corriger tes déséquilibres.", "Le bois glisse plus que la résine : magnésie fine et peau sèche.", "Commence 5 à 10° moins raide que sur la Kilter."],
+    tips: ["Vérifie sur le mur ou auprès de l’accueil si c’est un Tension Board 2 ou 1 : chaque version a son app.", "Disposition miroir : chaque bloc existe aussi dans l’autre sens. Fais les deux côtés pour corriger tes déséquilibres.", "Le bois glisse plus que la résine : magnésie fine et peau sèche.", "Commence 5 à 10° moins raide que sur la Kilter."],
   },
   moon: {
-    id: "moon", name: "MoonBoard 2016", app: "App MoonBoard",
+    id: "moon", name: "MoonBoard 2016", app: "MoonBoard", appNote: "app MoonBoard de Moon Climbing",
     specs: "Jeu de prises 2016, angle standard de 40°",
     use: "Force des doigts : petites réglettes, peu de pieds. Le plus exigeant pour les doigts des quatre.",
     tips: ["Choisis le jeu de prises « MoonBoard 2016 » dans l’app, sinon les blocs ne correspondent pas.", "Filtre « Benchmarks » : les blocs de référence, cotations les plus fiables.", "Cotation en Font : jamais 2 séances MoonBoard en moins de 48 h."],
   },
   spray: {
-    id: "spray", name: "Spray wall", app: "Pas d’app",
+    id: "spray", name: "Spray wall", app: "Aucune app", appNote: "pas d’app : tu crées tes blocs",
     specs: "Mur couvert de prises, sans blocs tracés",
     use: "Tes propres blocs : 4×4, travail du style faible, répétition d’un mouvement précis.",
     tips: ["Prends une photo de tes blocs maison pour les retrouver.", "Pour les 4×4 : 4 blocs voisins, 6 à 10 mouvements chacun.", "Règle simple : mains sur les prises choisies, pieds libres, pour aller vite."],
@@ -72,3 +73,11 @@ export function boardPlan(week: number, grade: Grade): BoardPlan {
 }
 
 export const BOARD_GRADE_NOTE = "Les boards cotent en général 1 niveau plus dur que les blocs de salle, parfois 2 sur la MoonBoard. Un V5 sur board vaut souvent un V6 de salle.";
+
+/** Short label used in session outlines, e.g. "MoonBoard 2016 · app MoonBoard". */
+export function boardLabel(block: { board?: "auto" | "spray" }, week: number, grade: Grade): string | null {
+  if (!block.board) return null;
+  if (block.board === "spray") return "Spray wall en option";
+  const p = boardPlan(week, grade);
+  return `${p.board.name}${p.board.id !== "moon" ? ` ${p.angle}°` : ""} · app ${p.board.app}`;
+}

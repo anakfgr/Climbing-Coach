@@ -9,7 +9,7 @@ export function BoardPlanCard({ block, week, compact }: { block: Block; week: nu
     const b = BOARDS.spray;
     return (
       <div className="board-plan">
-        <div className="row between"><b>{b.name}</b><span className="chip">Option</span></div>
+        <div className="row between"><b>{b.name}</b><span className="chip">Option · {b.app}</span></div>
         <p className="small">{b.use}</p>
         {!compact && <ul className="clean small">{b.tips.map((t) => <li key={t}>{t}</li>)}</ul>}
       </div>
@@ -24,7 +24,8 @@ export function BoardPlanCard({ block, week, compact }: { block: Block; week: nu
       </div>
       <p className="small">{p.board.use}</p>
       <div className="stack" style={{ gap: 4 }}>
-        <span className="eyebrow">Dans l’{p.board.app.replace("App ", "app ")}</span>
+        <span className="eyebrow">À régler dans l’app {p.board.app}</span>
+        <span className="small muted">App à ouvrir : {p.board.appNote}.</span>
         <ol className="clean small">{p.filters.map((f) => <li key={f}>{f}</li>)}</ol>
       </div>
       <p className="small"><b>{p.count}</b>, {p.attempts}, 3 min de repos.</p>

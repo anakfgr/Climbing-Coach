@@ -67,6 +67,9 @@ export interface Exercise {
   how: string[];
   errors: string[];
   progress: string;
+  /** Suggested first load for a 59 kg climber; startKg pre-fills the guided session. */
+  start: string;
+  startKg?: number;
   regress: string;
 }
 

@@ -381,7 +381,8 @@ function GymStep({ ex, phase, draft, patch, deload }: StepProps & { ex: Exercise
   const spec = ex.sets[phase as keyof typeof ex.sets];
   const parsed = parseSets(spec);
   const nSets = deload ? 2 : parsed.sets;
-  const prev = lastLoad(s, ex.id);
+  const prev = lastLoad(s, ex.id) || (ex.startKg != null ? String(ex.startKg) : "");
+  const hasHistory = !!lastLoad(s, ex.id);
   const rows: GymSet[] = draft.gym[ex.id] ?? Array.from({ length: nSets }, () => ({ reps: parsed.reps, load: prev, done: false }));
   const cd = useCountdown(beepEnd);
   const rest = parseRest(ex.rest);
@@ -397,7 +398,8 @@ function GymStep({ ex, phase, draft, patch, deload }: StepProps & { ex: Exercise
         <div className="illus"><ExerciseArt id={ex.id} /></div>
         <div className="stack" style={{ gap: 4 }}>
           <span className="big num" style={{ color: "var(--accent)" }}>{deload ? "2 séries, charge de la semaine passée" : spec}</span>
-          <span className="small muted">Repos {ex.rest}{prev ? ` · dernière charge ${prev} kg` : ""}</span>
+          <span className="small muted">Repos {ex.rest}{hasHistory ? ` · dernière charge ${prev} kg` : ""}</span>
+          {!hasHistory && <span className="small"><b>Départ conseillé :</b> {ex.start}</span>}
         </div>
       </div>
       <ol className="clean small">{ex.how.map((h) => <li key={h}>{h}</li>)}</ol>
@@ -416,6 +418,7 @@ function GymStep({ ex, phase, draft, patch, deload }: StepProps & { ex: Exercise
         ))}
         <button type="button" className="btn sm ghost" style={{ justifySelf: "start" }} onClick={() => patch((d) => { d.gym[ex.id] = [...rows, { ...rows[rows.length - 1], done: false }]; })}>+ Ajouter une série</button>
       </div>
+      <p className="small muted"><b>Ajuster :</b> 4 reps ou plus en réserve à la dernière série → +2,5 kg (ou haltère suivant) la prochaine fois. Dernière rep très lente ou ratée → garde ou baisse de 10 %.</p>
       <RestTimer cd={cd} seconds={rest} />
       <details className="fold"><summary>Erreurs à éviter</summary><div className="inner"><ul className="clean list-no">{ex.errors.map((e) => <li key={e}>{e}</li>)}</ul><p className="small"><b>Trop dur ?</b> {ex.regress}</p></div></details>
     </>

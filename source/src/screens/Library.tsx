@@ -22,6 +22,7 @@ function ExerciseCard({ ex, ph }: { ex: Exercise; ph: PhaseId }) {
       </div>
       <p className="small muted">{ex.muscles}</p>
       <p><b>Pour la grimpe :</b> {ex.why}</p>
+      <div className="banner info small"><b>Charge de départ :</b> {ex.start}</div>
       {ex.id === "fl" && <div className="illus" style={{ aspectRatio: "400 / 112" }}><FrontLeverStrip /></div>}
       <div className="ex-cols">
         <div><h5>Exécution</h5><ol>{ex.how.map((x) => <li key={x}>{x}</li>)}</ol></div>
@@ -93,7 +94,7 @@ export function Library({ anchor }: { anchor?: string }) {
               <div><h4 style={{ marginBottom: 6 }}>À faire</h4><ul className="clean list-do">{GYM_DO.map((x) => <li key={x}>{x}</li>)}</ul></div>
               <div><h4 style={{ marginBottom: 6 }}>À éviter</h4><ul className="clean list-no">{GYM_DONT.map((x) => <li key={x}>{x}</li>)}</ul></div>
             </div>
-            <p className="small muted"><b>Choisir la charge :</b> RPE 7 à 8, soit 2 à 3 répétitions en réserve. Si la dernière rep ralentit fortement, c’est trop lourd.</p>
+            <p className="small muted"><b>Choisir la charge :</b> chaque exercice indique une charge de départ pour ton gabarit. Vise RPE 7 à 8 : 2 à 3 répétitions en réserve. 4 reps ou plus en réserve → +2,5 kg la séance suivante ; dernière rep très lente ou ratée → garde ou baisse de 10 %.</p>
           </section>
           <div className="seg" aria-label="Phase">{PHASES.map((p) => <button key={p.id} type="button" className={p.id === ph ? "on" : ""} onClick={() => setPh(p.id)}>{p.short}</button>)}</div>
           <div className="banner info">{GYM_PHASE_NOTE[ph]} Décharge (S8, S12, S16) : 2 séries de tout à la charge de la semaine précédente.</div>
